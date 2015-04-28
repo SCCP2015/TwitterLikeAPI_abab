@@ -9,15 +9,30 @@ class MainApp < Sinatra::Base
     register Sinatra::Reloader
   end
   get '/' do
-    'GET'
+    if File.exist?('data')
+      File.read('data')
+    else
+      ''
+    end
   end
   post '/' do
-    request.body.gets + "\n"
+    body = request.body.gets + "\n"
+    if File.exist?('data')
+      data = File.read('data')
+      File.write('data', data + body)
+      data + body
+    else
+      File.write('data', body)
+      body
+    end
   end
   put '/' do
-    request.body.gets + "\n"
+    body = request.body.gets + "\n"
+    File.write('data', body)
+    body
   end
   delete '/' do
-    'DELETE'
+    File.write('data', '')
+    ''
   end
 end
