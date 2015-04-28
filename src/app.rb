@@ -1,6 +1,7 @@
 # coding: utf-8
 require 'sinatra/base'
 require 'sinatra/reloader'
+require_relative 'database'
 
 # Sinatra Main controller
 class MainApp < Sinatra::Base
@@ -9,30 +10,17 @@ class MainApp < Sinatra::Base
     register Sinatra::Reloader
   end
   get '/' do
-    if File.exist?('data')
-      File.read('data')
-    else
-      ''
-    end
+    Database.instance.read
   end
   post '/' do
-    body = request.body.gets + "\n"
-    if File.exist?('data')
-      data = File.read('data')
-      File.write('data', data + body)
-      data + body
-    else
-      File.write('data', body)
-      body
-    end
+    body = request.body.gets
+    Database.instance.write(body)
   end
   put '/' do
-    body = request.body.gets + "\n"
-    File.write('data', body)
-    body
+    body = request.body.gets
+    Database.instance.update(body)
   end
   delete '/' do
-    File.write('data', '')
-    ''
+    Database.instance.delete
   end
 end
