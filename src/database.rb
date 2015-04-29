@@ -18,17 +18,20 @@ class Database
   def write(word)
     if File.exist?(FILE)
       data = File.read(FILE)
-      File.write(FILE, data + word + '\n')
-      data + word
+      new_data = data + word + "\n"
+      File.write(FILE, new_data)
+      new_data
     else
-      File.write(FILE, word)
-      word
+      new_data = word + "\n"
+      File.write(FILE, new_data)
+      new_data
     end
   end
 
   def update(word)
-    File.write(FILE, word + '\n')
-    word
+    new_data = word + "\n"
+    File.write(FILE, new_data)
+    new_data
   end
 
   def delete
