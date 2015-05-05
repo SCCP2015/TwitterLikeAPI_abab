@@ -34,7 +34,7 @@
 
       $ vim spec/spec_helper.rb
      
-add text to begging part
+add text to end of the file
       
       #Read test target file
       Dir[File.join(File.dirname(__FILE__), "../src/**/*.rb")].each { |f| require f }
