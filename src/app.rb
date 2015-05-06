@@ -1,7 +1,11 @@
 # coding: utf-8
 require 'sinatra/base'
 require 'sinatra/reloader'
-require_relative 'database'
+require 'data_mapper'
+require_relative 'word'
+
+DataMapper::Logger.new($stdout, :debug)
+DataMapper.setup(:default, 'postgres://vagrant:vagrant@localhost/myapp')
 
 # Sinatra Main controller
 class MainApp < Sinatra::Base
@@ -9,18 +13,42 @@ class MainApp < Sinatra::Base
   configure :development do
     register Sinatra::Reloader
   end
-  get '/' do
-    Database.instance.read
+  get '/words' do
+    words = Word.all.map do |w|
+      w.id.to_s + ": #{w.msg}"
+    end
+    words.join(', ')
   end
-  post '/' do
-    body = request.body.gets
-    Database.instance.write(body)
+  get '/words/:id' do
+    id = params[:id]
+    word = Word.get(id)
+    if word.nil?
+      "Record of id: #{id} is not found."
+    else
+      word.id.to_s + ": #{word.msg}"
+    end
   end
-  put '/' do
-    body = request.body.gets
-    Database.instance.update(body)
+  post '/words' do
+    word = Word.create(msg: request.body.gets)
+    word.id.to_s
   end
-  delete '/' do
-    Database.instance.delete
+  put '/words/:id' do
+    id = params[:id]
+    word = Word.get(id)
+    if word.nil?
+      'false'
+    else
+      word.update(msg: request.body.gets)
+      'true'
+    end
+  end
+  delete '/words/:id' do
+    id = params[:id]
+    word = Word.get(id)
+    if word.nil?
+      'false'
+    else
+      word.destroy.to_s
+    end
   end
 end
