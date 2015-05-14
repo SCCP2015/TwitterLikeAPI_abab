@@ -17,9 +17,13 @@ class MainApp < Sinatra::Base
   use Rack::Session::Pool, expire_after: 2_592_000
 
   get '/session' do
+    session.id
+  end
+
+  get '/session/value' do
     'value = ' << session[:value].inspect
   end
-  post '/session' do
+  post '/session/value' do
     body = request.body.gets
     session[:value] = body
     body
