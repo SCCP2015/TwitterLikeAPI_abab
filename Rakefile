@@ -2,7 +2,7 @@ require 'rspec/core/rake_task'
 require 'dm-core'
 require 'dm-migrations'
 # Model Classes
-require_relative 'src/word'
+require_relative 'src/user'
 
 RSpec::Core::RakeTask.new(:spec)
 

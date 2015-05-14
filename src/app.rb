@@ -2,10 +2,11 @@
 require 'sinatra/base'
 require 'sinatra/json'
 require 'sinatra/reloader'
-# require 'data_mapper'
+require 'data_mapper'
+require_relative 'user'
 
-# DataMapper::Logger.new($stdout, :debug)
-# DataMapper.setup(:default, 'postgres://vagrant:vagrant@localhost/myapp')
+DataMapper::Logger.new($stdout, :debug)
+DataMapper.setup(:default, 'postgres://vagrant:vagrant@localhost/myapp')
 
 # Sinatra Main controller
 class MainApp < Sinatra::Base
@@ -16,16 +17,14 @@ class MainApp < Sinatra::Base
   # Session enable
   use Rack::Session::Pool, expire_after: 2_592_000
 
-  get '/session' do
-    session.id
+  get '/user' do
+    remember_token = User.new_remember_token
+    session[:remember_token] = remember_token
+
+    user = User.create(name: 'hoge',
+                       remember_token: User.encrypt(remember_token))
+    json(user)
   end
 
-  get '/session/value' do
-    'value = ' << session[:value].inspect
-  end
-  post '/session/value' do
-    body = request.body.gets
-    session[:value] = body
-    body
-  end
+
 end
