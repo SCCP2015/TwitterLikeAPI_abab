@@ -1,30 +1,15 @@
 # coding: utf-8
+require 'digest/md5'
 
+# Session Helper Module
 module SessionsHelper
-  def sign_in(user)
-
+  def new_remember_token
+    SecureRandom.urlsafe_base64
   end
 
-end
-
-class MainApp < Sinatra::Base
-  # Sinatra Auto Reload
-  configure :development do
-    register Sinatra::Reloader
-  end
-  # Session enable
-  use Rack::Session::Pool, expire_after: 2_592_000
-
-  get '/session' do
-    session.id
-  end
-
-  get '/session/value' do
-    'value = ' << session[:value].inspect
-  end
-  post '/session/value' do
-    body = request.body.gets
-    session[:value] = body
-    body
+  def encrypt(str)
+    # create ramdom string for every user
+    salt = 'salt'
+    Digest::MD5.hexdigest(str + salt)
   end
 end

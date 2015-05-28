@@ -6,18 +6,22 @@ class User
   include DataMapper::Resource
 
   property :id, Serial
+  #  Names of twitterlike's users are not duplicated.
   property :name, String, unique: true
+  property :create_time, DateTime
+
+  has n, :user_sessions
+end
+
+# Model class
+class UserSession
+  include DataMapper::Resource
+
+  property :id, Serial
   property :remember_token, String
+  property :create_time, DateTime
 
-  def self.new_remember_token
-    SecureRandom.urlsafe_base64
-  end
-
-  def self.encrypt(str)
-    # create ramdom string for every user
-    salt = 'salt'
-    Digest::MD5.hexdigest(str + salt)
-  end
+  belongs_to :user
 end
 
 DataMapper.finalize
