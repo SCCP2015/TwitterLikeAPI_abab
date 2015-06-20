@@ -1,5 +1,4 @@
 # coding: utf-8
-# require 'sinatra/base'
 require 'sinatra'
 require 'sinatra/json'
 require 'json'
@@ -32,20 +31,56 @@ class MainApp < Sinatra::Base
     if user.nil?
       json(error: 'This user already exists.')
     else
+      signin(user.id)
       user.id.to_json
     end
   end
 
-  # post '/users/signin' do
-  #
-  # end
+  get '/users/tokens' do
+    json(UserSession.all)
+  end
+
+  get '/users/isSignin' do
+    json(signin?)
+  end
 
   # ==== Session ==== #
-  # def signin
-  # request.body.gets
-  #  session[:remember_token] = User.new_rember_token
-  #  User.
-  # end
+  def signin?
+    token = session[:token]
+    if token.nil?
+      false
+    elsif authenticate_by_token(token)
+      true
+    else
+      false
+    end
+  end
+
+  def signin(user_id)
+    user_session = UserSession.first(user_id: user_id)
+    if user_session
+      update_token(user_session)
+      true
+    elsif User.get(user_id)
+      create_token(user_id)
+      true
+    else
+      false
+    end
+  end
+
+  def create_token(user_id)
+    token = new_token
+    session[:token] = token
+    UserSession.create(
+      token_hash: to_hash(token), create_time: Time.now, user_id: user_id)
+  end
+
+  def update_token(user_session)
+    token = new_token
+    session[:token] = token
+    user_session.update(token_hash: to_hash(token), create_time: Time.now)
+  end
 
   # def signout
   # session[:remember_token] = nil

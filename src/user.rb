@@ -19,7 +19,7 @@ class UserSession
   include DataMapper::Resource
 
   property :id, Serial
-  property :token_hash, String, unique: true
+  property :token_hash, Text, unique: true
   property :create_time, DateTime
 
   belongs_to :user

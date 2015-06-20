@@ -5,7 +5,7 @@ require_relative 'user'
 
 # Auth Helper Module
 module AuthHelper
-  def new_remember_token
+  def new_token
     SecureRandom.urlsafe_base64
   end
 
@@ -31,8 +31,7 @@ module AuthHelper
 
   # authenticate by token (when a user access APIs)
   def authenticate_by_token(token)
-    return unless UserSession.first(token_hash: to_hash(token))
-    User.get(user_session.user_id)
+    UserSession.first(token_hash: to_hash(token))
   end
 
   def to_hash(str)
