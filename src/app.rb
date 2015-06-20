@@ -1,17 +1,19 @@
 # coding: utf-8
-require 'sinatra/base'
+# require 'sinatra/base'
+require 'sinatra'
 require 'sinatra/json'
+require 'json'
 require 'sinatra/reloader'
 require 'data_mapper'
 require_relative 'user'
-require_relative 'sessions_helper'
+require_relative 'auth_helper'
 
 DataMapper::Logger.new($stdout, :debug)
 DataMapper.setup(:default, 'postgres://vagrant:vagrant@localhost/myapp')
 
 # Sinatra Main controller
 class MainApp < Sinatra::Base
-  include SessionsHelper
+  include AuthHelper
   # Sinatra Auto Reload
   configure :development do
     register Sinatra::Reloader
@@ -20,14 +22,23 @@ class MainApp < Sinatra::Base
   use Rack::Session::Pool, expire_after: 2_592_000
 
   # ==== User API ==== #
-  post '/user' do
-    name = request.body.gets
-    remember_token = new_remember_token
-    session[:remember_token] = remember_token
-    user = User.create(name: name, create_time: Time.now)
-    json(user)
-    # remember_token: encrypt(remember_token))
+  get '/users' do
+    json(User.all)
   end
+
+  post '/users', provides: :json do
+    hash = JSON.parse(request.body.read)
+    user = create_user(hash['name'], hash['password'])
+    if user.nil?
+      json(error: 'This user already exists.')
+    else
+      user.id.to_json
+    end
+  end
+
+  # post '/users/signin' do
+  #
+  # end
 
   # ==== Session ==== #
   # def signin
