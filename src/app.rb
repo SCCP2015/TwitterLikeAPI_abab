@@ -25,6 +25,15 @@ class MainApp < Sinatra::Base
     json(User.all)
   end
 
+  get '/users/:id' do
+    user = User.get(params[:id].to_i)
+    if user.nil?
+      json(error: 'This user is not exist.')
+    else
+      json(user)
+    end
+  end
+
   post '/users', provides: :json do
     hash = JSON.parse(request.body.read)
     user = create_user(hash['name'], hash['password'])
@@ -36,12 +45,52 @@ class MainApp < Sinatra::Base
     end
   end
 
-  get '/users/tokens' do
+  get '/sessions' do
     json(UserSession.all)
   end
 
-  get '/users/isSignin' do
+  post '/sessions', provides: :json do
+    hash = JSON.parse(request.body.read)
+    puts "#{hash['name']}:#{hash['password']}"
+    user = find_user(hash['name'], hash['password'])
+    if user.nil?
+      json(error: 'This user is not exist or Wrong name or password.')
+    else
+      signin(user.id)
+      user.id.to_json
+    end
+  end
+
+  get '/user/signin' do
     json(signin?)
+  end
+
+  get '/tweets' do
+    json(Tweet.all)
+  end
+
+  post '/tweets', provides: :json do
+    hash = JSON.parse(request.body.read)
+    user = find_user_by_token(session[:token])
+    message = hash['message']
+    if user.nil?
+      json(error: 'This user is not exist.')
+    elsif message.strip.empty?
+      json(error: 'Message is empty.')
+    else
+      tweet =
+        Tweet.create(message: message, user_id: user.id, create_time: Time.now)
+      tweet.id.to_json
+    end
+  end
+
+  get '/tweets/:id' do
+    tweet = Tweet.get(params[:id].to_i)
+    if tweet.nil?
+      json(error: 'This tweet is not exist.')
+    else
+      json(user)
+    end
   end
 
   # ==== Session ==== #
@@ -81,8 +130,4 @@ class MainApp < Sinatra::Base
     session[:token] = token
     user_session.update(token_hash: to_hash(token), create_time: Time.now)
   end
-
-  # def signout
-  # session[:remember_token] = nil
-  # end
 end

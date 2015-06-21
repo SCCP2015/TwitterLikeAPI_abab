@@ -31,6 +31,7 @@ class Tweet
 
   property :id, Serial
   property :message, Text
+  property :create_time, DateTime
 
   belongs_to :user
 end

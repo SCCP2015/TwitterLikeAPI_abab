@@ -24,14 +24,29 @@ module AuthHelper
   # authenticate by name and password (when a user signin)
   def authenticate(name, password)
     user = User.first(name: name)
+    is_password =
+      user.password_hash == to_hash_with_salt(password, user.password_salt)
     return unless
-      user && user.password_hash == to_hash_with_salt(password, user.salt)
+      user && is_password
     user
   end
 
   # authenticate by token (when a user access APIs)
   def authenticate_by_token(token)
     UserSession.first(token_hash: to_hash(token))
+  end
+
+  def find_user(name, password)
+    authenticate(name, password)
+  end
+
+  def find_user_by_token(token)
+    if token.nil?
+      nil
+    else
+      user_session = authenticate_by_token(token)
+      retrun unless user_session User.get(user_session.user_id)
+    end
   end
 
   def to_hash(str)
