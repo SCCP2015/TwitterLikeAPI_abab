@@ -27,42 +27,34 @@ class MainApp < Sinatra::Base
 
   get '/users/:id' do
     user = User.get(params[:id].to_i)
-    if user.nil?
-      json(error: 'This user is not exist.')
-    else
-      json(user)
-    end
+    return json(error: 'This user is not exist.') if user.nil?
+    json(user)
   end
 
   post '/users', provides: :json do
     hash = JSON.parse(request.body.read)
     user = create_user(hash['name'], hash['password'])
-    if user.nil?
-      json(error: 'This user already exists.')
-    else
-      signin(user.id)
-      user.id.to_json
-    end
+    return json(error: 'This user already exists.') if user.nil?
+    signin(user.id)
+    user.id.to_json
   end
 
   get '/sessions' do
     json(UserSession.all)
   end
 
-  post '/sessions', provides: :json do
+  get '/user/signin' do
+    json(signin?)
+  end
+
+  post '/user/signin', provides: :json do
     hash = JSON.parse(request.body.read)
     puts "#{hash['name']}:#{hash['password']}"
     user = find_user(hash['name'], hash['password'])
-    if user.nil?
-      json(error: 'This user is not exist or Wrong name or password.')
-    else
-      signin(user.id)
-      user.id.to_json
-    end
-  end
-
-  get '/user/signin' do
-    json(signin?)
+    return json(error: 'This user is not exist or Wrong name or password.') if
+      user.nil?
+    signin(user.id)
+    user.id.to_json
   end
 
   get '/tweets' do
@@ -73,36 +65,25 @@ class MainApp < Sinatra::Base
     hash = JSON.parse(request.body.read)
     user = find_user_by_token(session[:token])
     message = hash['message']
-    if user.nil?
-      json(error: 'This user is not exist.')
-    elsif message.strip.empty?
-      json(error: 'Message is empty.')
-    else
-      tweet =
-        Tweet.create(message: message, user_id: user.id, create_time: Time.now)
-      tweet.id.to_json
-    end
+    return json(error: 'This user is not exist.') if user.nil?
+    return json(error: 'Message is empty.') if message.strip.empty?
+    tweet =
+      Tweet.create(message: message, user_id: user.id, create_time: Time.now)
+    tweet.id.to_json
   end
 
   get '/tweets/:id' do
     tweet = Tweet.get(params[:id].to_i)
-    if tweet.nil?
-      json(error: 'This tweet is not exist.')
-    else
-      json(user)
-    end
+    return json(error: 'This tweet is not exist.') if tweet.nil?
+    json(tweet)
   end
 
   # ==== Session ==== #
   def signin?
     token = session[:token]
-    if token.nil?
-      false
-    elsif authenticate_by_token(token)
-      true
-    else
-      false
-    end
+    return false if token.nil?
+    return true if authenticate_by_token(token)
+    false
   end
 
   def signin(user_id)

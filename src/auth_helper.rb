@@ -10,15 +10,12 @@ module AuthHelper
   end
 
   def create_user(name, password)
-    if User.first(name: name)
-      nil
-    else
-      salt = BCrypt::Engine.generate_salt
-      hash = to_hash_with_salt(password, salt)
-      User.create(
-        name: name, password_hash: hash, password_salt:
+    return nil if User.first(name: name)
+    salt = BCrypt::Engine.generate_salt
+    hash = to_hash_with_salt(password, salt)
+    User.create(
+      name: name, password_hash: hash, password_salt:
          salt, create_time: Time.now)
-    end
   end
 
   # authenticate by name and password (when a user signin)
@@ -26,8 +23,7 @@ module AuthHelper
     user = User.first(name: name)
     is_password =
       user.password_hash == to_hash_with_salt(password, user.password_salt)
-    return unless
-      user && is_password
+    return nil unless user && is_password
     user
   end
 
@@ -41,12 +37,10 @@ module AuthHelper
   end
 
   def find_user_by_token(token)
-    if token.nil?
-      nil
-    else
-      user_session = authenticate_by_token(token)
-      retrun unless user_session User.get(user_session.user_id)
-    end
+    return nil if token.nil?
+    user_session = authenticate_by_token(token)
+    return nil unless user_session
+    User.get(user_session.user_id)
   end
 
   def to_hash(str)
@@ -57,7 +51,6 @@ module AuthHelper
     BCrypt::Engine.hash_secret(str, salt)
   end
 end
-
 #  +-------------------------+  isExists?   +------+
 #  | Form with name and pass | -----------> | User |
 #  +-------------------------+              +------+
