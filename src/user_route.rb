@@ -4,76 +4,112 @@ require 'sinatra/json'
 require 'json'
 require_relative 'user'
 require_relative 'auth_helper'
+require_relative 'http_helper'
 
 # UserRoute
 class UserRoute < Sinatra::Base
   include AuthHelper
+  include HttpHelper
   get '/users' do
     json(User.all)
   end
 
   get '/users/:id' do
     user = User.get(params[:id].to_i)
-    return json(error: 'This user is not exist.') if user.nil?
+    return bad_response('This user is not exist.') if user.nil?
     json(user)
   end
 
   post '/users', provides: :json do
     hash = JSON.parse(request.body.read)
     user = create_user(hash['name'], hash['password'])
-    return json(error: 'This user already exists.') if user.nil?
+    return bad_response('This user already exists.') if user.nil?
     signin(user.id)
-    user.id.to_json
   end
 
   get '/sessions' do
     json(UserSession.all)
   end
 
-  get '/user/signin' do
-    json(signin?)
-  end
-
-  post '/user/signin', provides: :json do
+  post '/user/auth', provides: :json do
+    content = params['content']
     hash = JSON.parse(request.body.read)
-    puts "#{hash['name']}:#{hash['password']}"
-    user = find_user(hash['name'], hash['password'])
-    return json(error: 'This user is not exist or Wrong name or password.') if
-    user.nil?
-    signin(user.id)
-    user.id.to_json
+    if content == 'token'
+      signin?(hash['token'])
+    # authenticate by name and password
+    else
+      signin_by_name_pass(hash['name'], hash['password'])
+    end
   end
 
-  def signin?
-    token = session[:token]
-    return false if token.nil?
-    return true if authenticate_by_token(token)
-    false
+  # signout
+  delete '/sessions/:id/user' do
+    delete_session(params[:id])
+    true
+  end
+
+  def signin?(token)
+    return bad_response('token is empty') if token.nil?
+    session = authenticate_by_token(token)
+    return User.get(session.user_id).to_json if session
+    status 401 # Unauthorized
+    json(false)
   end
 
   def signin(user_id)
-    user_session = UserSession.first(user_id: user_id)
-    if user_session
-      update_token(user_session)
-      true
-    elsif User.get(user_id)
-      create_token(user_id)
-      true
+    user = User.get(user_id)
+    if user
+      json(user.to_hash.merge(token: create_token(user_id)))
     else
-      false
+      status 401 # Unauthorized
+      json(false)
     end
+  end
+
+  def signin_by_name_pass(name, password)
+    user = find_user(name, password)
+    return bad_response('This user is not exist, or wrong password.') if
+      user.nil?
+    signin(user.id)
   end
 
   def create_token(user_id)
     token = new_token
-    session[:token] = token
+    delete_session(user_id)
     UserSession.create(
       token_hash: to_hash(token), create_time: Time.now, user_id: user_id)
-  end
-
-  def update_token(user_session)
-    token = new_token
-    session[:token] = token
-    user_session.update(token_hash: to_hash(token), create_time: Time.now)
+    token
   end
 end
+
+# post /users
+# {"name", "hoge", "password", "hoge"}
+#
+#+--------+  post   +-------------------+  return    +------+
+# | Client | ------> | name and password | ---------> | User |
+# +--------+         +-------------------+            +------+
+#                       |
+#                       | return
+#                       v
+#              +-------------------+
+#              |       token       |
+#              +-------------------+
+#
+# post /user/auth?content=name_pass
+#
+# +--------+   auth    +-------------------+  return    +------+
+# | Client | --------> | name and password | ---------> | User |
+# +--------+           +-------------------+            +------+
+#                            |
+#                            | return
+#                            v
+#                  +-------------------+
+#                  |       token       |
+#                  +-------------------+
+#
+# post /user/auth?content=token
+#
+# +--------+   auth    +-------+  return   +------+
+# | Client | --------> | token | --------> | User |
+# +--------+           +-------+           +------+
+#

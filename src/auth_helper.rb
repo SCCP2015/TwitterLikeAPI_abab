@@ -18,6 +18,11 @@ module AuthHelper
          salt, create_time: Time.now)
   end
 
+  def delete_session(user_id)
+    old_session = UserSession.first(user_id: user_id)
+    old_session.destroy unless old_session.nil?
+  end
+
   # authenticate by name and password (when a user signin)
   def authenticate(name, password)
     user = User.first(name: name)
@@ -33,6 +38,7 @@ module AuthHelper
   end
 
   def find_user(name, password)
+    return nil if name.nil? || password.nil?
     authenticate(name, password)
   end
 

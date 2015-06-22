@@ -12,6 +12,12 @@ class User
   property :create_time, DateTime
 
   has n, :user_sessions
+  def to_hash
+    {
+      id: id, name: name, password_hash: password_hash,
+      password_salt: password_salt, create_time: create_time
+    }
+  end
 end
 
 # Model class
