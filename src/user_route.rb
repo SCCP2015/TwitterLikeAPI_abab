@@ -32,14 +32,13 @@ class UserRoute < Sinatra::Base
   end
 
   post '/user/auth', provides: :json do
-    content = params['content']
     hash = JSON.parse(request.body.read)
-    if content == 'token'
-      signin?(hash['token'])
-    # authenticate by name and password
-    else
-      signin_by_name_pass(hash['name'], hash['password'])
-    end
+    signin_by_name_pass(hash['name'], hash['password'])
+  end
+
+  post '/user/auth/token', provides: :json do
+    hash = JSON.parse(request.body.read)
+    signin?(hash['token'])
   end
 
   # signout
