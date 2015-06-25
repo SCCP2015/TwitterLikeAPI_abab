@@ -11,7 +11,7 @@ class TweetRoute < Sinatra::Base
   include AuthHelper
   include HttpHelper
   get '/tweets' do
-    json(Tweet.all)
+    json(Tweet.all.map(&:to_hash))
   end
 
   post '/tweets', provides: :json do
@@ -35,5 +35,9 @@ class TweetRoute < Sinatra::Base
     tweet = Tweet.get(params[:id].to_i)
     return bad_response('This tweet is not exist.') if tweet.nil?
     json(tweet)
+  end
+
+  get '/tweets/user/:user_id/count' do
+    json(Tweet.all(user_id: params[:user_id].to_i).count)
   end
 end

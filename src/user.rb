@@ -40,6 +40,24 @@ class Tweet
   property :create_time, DateTime
 
   belongs_to :user
+
+  def to_hash
+    tweet = {
+      id: id, message: message, create_time: create_time
+    }
+    user = User.get(user_id).to_hash
+    user.merge(tweet)
+  end
+end
+
+# Model class
+class Follower
+  include DataMapper::Resource
+
+  property :id, Serial
+  property :user_id, Integer
+  property :follower_id, Integer
+  property :create_time, DateTime
 end
 
 DataMapper.finalize
