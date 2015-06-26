@@ -26,6 +26,7 @@ module AuthHelper
   # authenticate by name and password (when a user signin)
   def authenticate(name, password)
     user = User.first(name: name)
+    return nil if user.nil?
     is_password =
       user.password_hash == to_hash_with_salt(password, user.password_salt)
     return nil unless user && is_password
