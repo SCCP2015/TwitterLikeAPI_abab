@@ -7,6 +7,7 @@ require 'data_mapper'
 require_relative 'user'
 require_relative 'user_route'
 require_relative 'tweet_route'
+require_relative 'follower_route'
 require_relative 'auth_helper'
 
 DataMapper::Logger.new($stdout, :debug)
@@ -23,4 +24,5 @@ class MainApp < Sinatra::Base
   use Rack::Session::Pool, expire_after: 2_592_000
   use UserRoute
   use TweetRoute
+  use FollowerRoute
 end

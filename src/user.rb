@@ -12,6 +12,8 @@ class User
   property :create_time, DateTime
 
   has n, :user_sessions
+  has n, :tweets
+  has n, :followers
   def to_hash
     {
       id: id, name: name, password_hash: password_hash,
@@ -55,9 +57,10 @@ class Follower
   include DataMapper::Resource
 
   property :id, Serial
-  property :user_id, Integer
   property :follower_id, Integer
   property :create_time, DateTime
+
+  belongs_to :user
 end
 
 DataMapper.finalize
