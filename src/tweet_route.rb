@@ -37,6 +37,13 @@ class TweetRoute < Sinatra::Base
     json(tweet)
   end
 
+  get '/tweets/user/:user_id' do
+    user_id = params[:user_id].to_i
+    followers_id_list = Follower.all(
+      user_id: user_id).map(&:follower_id).push(user_id)
+    json(Tweet.all(user_id: followers_id_list).map(&:to_hash))
+  end
+
   get '/tweets/user/:user_id/count' do
     json(Tweet.all(user_id: params[:user_id].to_i).count)
   end
