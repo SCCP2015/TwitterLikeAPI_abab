@@ -42,6 +42,15 @@ class FollowerRoute < Sinatra::Base
     json(User.all(id: followers_id_list))
   end
 
+  get '/followers/user/:user_id/count' do
+    json(Follower.all(user_id: params[:user_id].to_i).count)
+  end
+
+  get '/followers/user/:user_id/followed_count' do
+    followered_count = Follower.all(follower_id: params[:user_id].to_i).count
+    json(followered_count)
+  end
+
   get '/followers/user/:user_id/unfollow' do
     user_id = params[:user_id].to_i
     followers_id_list = Follower.all(
